@@ -1,0 +1,205 @@
+---
+title: "AssignmentfiveNov29"
+author: "Zaid Sameer"
+date: '2018-11-29'
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r}
+
+#Question 2
+
+diploid_selection <- function(p0 = 0.5, wAA = 1.1, wAa = 1.0, waa = 0.9, n = 200) {
+    
+    # Initialize vectors to store allele frequencies and mean pop fitness
+    p <- rep(NA,n)  # a vector to store allele frequencies
+    delta_p <- rep(NA, n) 
+    w_bar <- rep(NA, n)
+     
+    # starting conditions
+   	p[1] <- p0 # starting allele frequencies
+   	delta_p[1] <- 0 #change in allele frequency
+	  w_bar[1] <- (p[1])^2 * (wAA) + 2*p[1]*(1- p[1] )*wAa + ((1- p[1])^2) * waa
+	
+	# now we need to loop from generation to generation
+	for ( i in 2:n) {
+		w_bar[i - 1] <- (p[i - 1])^2 * (wAA) + 2*p[i - 1]*(1- p[i - 1] )*wAa + ((1- p[i - 1])^2) * waa 
+		p[i] <- (p[i - 1])^2 * (wAA/w_bar[i-1]) + (p[i - 1])*(1- p[i - 1])*wAa/w_bar[i-1]
+			delta_p[i] <- p[i] - p[i-1] 
+		}
+ if (any(p > 0.9999)) {
+    fixation <- min(which.max(p > 0.9999))
+    cat("fixation for A1 occurs approximately at generation:", fixation )	
+    } else {
+        maxAlleleFreq <- max(p)
+    	cat("fixation of A1 does not occur, max. allele frequency is:", print(maxAlleleFreq, digits = 2) )
+    }
+   plot(x = 1:n, y = p, 
+     xlab="generations", 
+	 ylab="Allele frequency (p)", 
+	 pch = 20, col = "red", cex.lab = 1.5)
+}
+
+diploid_selection(p0 = 0.5, wAA = 1.1, wAa = 1.0, waa = 0.9, n = 200)
+
+
+
+```
+
+
+
+```{r}
+# Question 3 
+
+#fixed if pA gets to zero or one
+#trying to add diploid or haploid
+
+genetic_drift_function <- function(numofgen=20, pA0=0.5, sst0=20, diploid=FALSE){
+  
+      pA <- rep(NA,numofgen)  # a vector to store allele frequencies
+
+   	pA[1] <- pA0 # starting allele frequencies
+   	
+   	if (diploid == TRUE) {sst0 <- 2*sst0}
+	# now we need to loop from generation to generation
+	for ( i in 2:numofgen) {
+allele_counts <- sample(c("a", "A"),
+                        size = sst0,
+                        replace = TRUE,
+                        prob = c((1-pA[i-1]), pA[i-1]))
+
+   	
+pA[i] <-sum(allele_counts=="A")/length(allele_counts) 
+	}
+plot(pA, 
+     ylab = "frequency of A", 
+     xlab = "generation")
+}
+
+genetic_drift_function(numofgen=40, pA0=0.4, sst0=50, diploid=FALSE)
+
+```
+
+
+
+```{r}
+#Question 4 (100 generations, running model a 1000 times, 3 different pA0 (0.5, 0.25 and 0.1) 200 diploid individuals)
+
+genetic_drift_function_TH <- function(numofgen=1000, pA0=0.5, sst0=200, diploid=FALSE){
+  
+      pA <- rep(NA,numofgen)  # a vector to store allele frequencies
+
+   	pA[1] <- pA0 # starting allele frequencies
+   	
+   	if (diploid == TRUE) {sst0 <- 2*sst0}
+	# now we need to loop from generation to generation
+	for ( i in 2:numofgen) {
+allele_counts <- sample(c("a", "A"),
+                        size = sst0,
+                        replace = TRUE,
+                        prob = c((1-pA[i-1]), pA[i-1]))
+
+   	
+pA[i] <-sum(allele_counts=="A")/length(allele_counts) 
+	}
+   
+if (pA[numofgen] == 0) {print("Y")}
+   	else {print("N")} #function prints Y if the allele is ever lost (otherwise it prints N)
+}
+
+
+athousand_0.5 <- replicate(1000, genetic_drift_function_TH(numofgen=100, pA0=0.5, sst0=200, diploid=TRUE))
+sum(athousand_0.5=="Y")/length(athousand_0.5)
+
+athousand_0.25 <- replicate(1000, genetic_drift_function_TH(numofgen=100, pA0=0.25, sst0=200, diploid=TRUE))
+sum(athousand_0.25=="Y")/length(athousand_0.25)
+
+athousand_0.1 <- replicate(1000, genetic_drift_function_TH(numofgen=100, pA0=0.1, sst0=200, diploid=TRUE))
+sum(athousand_0.1=="Y")/length(athousand_0.1)
+```
+
+
+```{r}
+
+#Question 5
+genetic_drift_function_100_plot <- function(numofgen=20, pA0=0.5, sst0=20, diploid=FALSE){
+  
+      pA <- rep(NA,numofgen)  # a vector to store allele frequencies
+
+   	pA[1] <- pA0 # starting allele frequencies
+   	
+   	if (diploid == TRUE) {sst0 <- 2*sst0}
+	# now we need to loop from generation to generation
+	for ( i in 2:numofgen) {
+allele_counts <- sample(c("a", "A"),
+                        size = sst0,
+                        replace = TRUE,
+                        prob = c((1-pA[i-1]), pA[i-1]))
+
+   	
+pA[i] <-sum(allele_counts=="A")/length(allele_counts) 
+	}
+   print(pA)
+}
+
+for (i in 1:100){
+    pA_lines <- genetic_drift_function_100_plot(numofgen=100, pA0=0.5, sst0=50, diploid=FALSE)
+
+    if (i == 1) {plot(pA_lines, type="n", ylim = c(0,1), ylab = "frequency of A", 
+     xlab = "generation" )
+    lines(x=(1:100),y=pA_lines,col=sample(rainbow(10)))  }
+    else
+      {lines(x=(1:100),y=pA_lines,col=sample(rainbow(10)))}
+
+}
+
+```
+
+```{r}
+#question 6
+question_6_function<- function(intercept=0.5, slope=0.1, numofobs=20, standdev=2){
+  x <- seq(from=1, to=10, length.out = numofobs)
+
+  a <- intercept
+  b <- slope
+
+y_deterministic <- b*x + a
+y_simulated <- rnorm(length(x), mean=y_deterministic, sd=standdev)
+mod_sim <- lm(y_simulated ~ x)
+p_val_slope <- summary(mod_sim)$coeff[2,4]
+print(p_val_slope)
+
+}
+
+#to check
+
+set.seed(720)
+question_6_function()
+set.seed(720)
+  x <- seq(from=1, to=10, length.out = 20)
+
+a <- 0.5
+  b <- 0.1
+
+y_deterministic <- b*x + a
+y_simulated <- rnorm(length(x), mean=y_deterministic, sd=2)
+mod_sim <- lm(y_simulated ~ x)
+p_val_slope <- summary(mod_sim)$coeff[2,4]
+print(p_val_slope)
+
+#now to generate histograms
+
+for_hist <- replicate(1000, question_6_function())
+hist(for_hist)
+sum(for_hist < 0.05)/length(for_hist)
+
+for_hist_slope_zero <- replicate(1000, question_6_function(slope=0))
+hist(for_hist_slope_zero)
+sum(for_hist_slope_zero < 0.05)/length(for_hist_slope_zero)
+#less proportion is has a p < 0.05 when slope is zero
+
+
+```
